@@ -1,0 +1,22 @@
+{
+  "libpath": "/Users/tarun/Developer/projects/heimdall-v2/target/release/libcore.dylib",
+  "kafka": {
+    "bootstrap.servers": "localhost:9092",
+    "security.protocol": "plaintext"
+  },
+  "shutdown_timeout_ms": 30000,
+  "filters": [
+    {
+      "update_account_topic": "heimdall-accounts",
+      "slot_status_topic": "heimdall-slots",
+      "transaction_topic": "heimdall-transactions",
+      "program_ignores": ["Vote111111111111111111111111111111111111111"],
+      "program_filters": [],
+      "account_filters": [],
+      "publish_all_accounts": false,
+      "include_vote_transactions": false,
+      "include_failed_transactions": true,
+      "wrap_messages": true
+    }
+  ]
+}

@@ -1,96 +1,113 @@
-use crate::config::ConfigFilter;
-use solana_pubkey::Pubkey;
+// Copyright 2024 Heimdall Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-const PUBKEY_SIZE: usize = 32;
+use {
+    crate::ConfigFilter,
+    solana_pubkey::Pubkey,
+    std::{collections::HashSet, str::FromStr},
+};
 
+/// Runtime filter for determining which events to publish
 pub struct Filter {
+    pub publish_all_accounts: bool,
+    pub program_ignores: HashSet<[u8; 32]>,
+    pub program_filters: HashSet<[u8; 32]>,
+    pub account_filters: HashSet<[u8; 32]>,
+    pub include_vote_transactions: bool,
+    pub include_failed_transactions: bool,
+
     pub update_account_topic: String,
     pub slot_status_topic: String,
     pub transaction_topic: String,
-    program_ignores: Vec<Pubkey>,
-    program_filters: Vec<Pubkey>,
-    account_filters: Vec<Pubkey>,
-    pub publish_all_accounts: bool,
-    pub include_vote_transactions: bool,
-    pub include_failed_transactions: bool,
+
     pub wrap_messages: bool,
 }
 
 impl Filter {
+    /// Create a new filter from configuration
     pub fn new(config: &ConfigFilter) -> Self {
         Self {
+            publish_all_accounts: config.publish_all_accounts,
+            program_ignores: config
+                .program_ignores
+                .iter()
+                .flat_map(|p| Pubkey::from_str(p).ok().map(|p| p.to_bytes()))
+                .collect(),
+            program_filters: config
+                .program_filters
+                .iter()
+                .flat_map(|p| Pubkey::from_str(p).ok().map(|p| p.to_bytes()))
+                .collect(),
+            account_filters: config
+                .account_filters
+                .iter()
+                .flat_map(|p| Pubkey::from_str(p).ok().map(|p| p.to_bytes()))
+                .collect(),
+            include_vote_transactions: config.include_vote_transactions,
+            include_failed_transactions: config.include_failed_transactions,
+
             update_account_topic: config.update_account_topic.clone(),
             slot_status_topic: config.slot_status_topic.clone(),
             transaction_topic: config.transaction_topic.clone(),
-            program_ignores: Self::parse_pubkeys_to_vec(&config.program_ignores),
-            program_filters: Self::parse_pubkeys_to_vec(&config.program_filters),
-            account_filters: Self::parse_pubkeys_to_vec(&config.account_filters),
-            publish_all_accounts: config.publish_all_accounts,
-            include_vote_transactions: config.include_vote_transactions,
-            include_failed_transactions: config.include_failed_transactions,
+
             wrap_messages: config.wrap_messages,
         }
     }
 
-    pub fn wants_program(&self, program_id_bytes: &[u8]) -> bool {
-        if program_id_bytes.len() != PUBKEY_SIZE {
-            return false; // Invalid pubkey length
+    /// Check if we want to process events for this program
+    pub fn wants_program(&self, program: &[u8]) -> bool {
+        match <&[u8; 32]>::try_from(program) {
+            Ok(key) => {
+                !self.program_ignores.contains(key)
+                    && (self.program_filters.is_empty() || self.program_filters.contains(key))
+            }
+            Err(_error) => true,
         }
-        
-        let program_id_array: &[u8; PUBKEY_SIZE] = match program_id_bytes.try_into() {
-            Ok(arr) => arr,
-            Err(_) => return false, // Not a 32-byte pubkey, should not happen if len checked
-        };
-        let program_id = Pubkey::new_from_array(*program_id_array);
-
-        if self.program_ignores.contains(&program_id) {
-            return false;
-        }
-
-        if !self.program_filters.is_empty() {
-            return self.program_filters.contains(&program_id);
-        }
-
-        true
     }
 
-    pub fn wants_account(&self, account_id_bytes: &[u8]) -> bool {
-        if account_id_bytes.len() != PUBKEY_SIZE {
-            return false;
+    /// Check if we want to process events for this account
+    pub fn wants_account(&self, account: &[u8]) -> bool {
+        match <&[u8; 32]>::try_from(account) {
+            Ok(key) => {
+                self.account_filters.is_empty() || self.account_filters.contains(key)
+            }
+            Err(_error) => self.account_filters.is_empty(),
         }
-        
-        let account_id_array: &[u8; PUBKEY_SIZE] = match account_id_bytes.try_into() {
-            Ok(arr) => arr,
-            Err(_) => return false,
-        };
-        let account_id = Pubkey::new_from_array(*account_id_array);
-
-        if !self.account_filters.is_empty() {
-            return self.account_filters.contains(&account_id);
-        }
-
-        true
     }
 
-    #[inline(always)]
+    /// Check if we want to process vote transactions
     pub fn wants_vote_tx(&self) -> bool {
         self.include_vote_transactions
     }
 
-    #[inline(always)]
+    /// Check if we want to process failed transactions
     pub fn wants_failed_tx(&self) -> bool {
         self.include_failed_transactions
     }
 
-    fn parse_pubkeys_to_vec(keys: &[String]) -> Vec<Pubkey> {
-        keys.iter()
-            .filter_map(|s| match s.parse::<Pubkey>() {
-                Ok(pk) => Some(pk),
-                Err(e) => {
-                    log::error!("Failed to parse Pubkey '{}': {}", s, e);
-                    None
-                }
-            })
-            .collect()
+    /// Check if account topic is configured
+    pub fn has_account_topic(&self) -> bool {
+        !self.update_account_topic.is_empty()
+    }
+
+    /// Check if slot topic is configured
+    pub fn has_slot_topic(&self) -> bool {
+        !self.slot_status_topic.is_empty()
+    }
+
+    /// Check if transaction topic is configured
+    pub fn has_transaction_topic(&self) -> bool {
+        !self.transaction_topic.is_empty()
     }
 }

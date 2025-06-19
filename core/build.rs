@@ -1,9 +1,4 @@
-// build.rs
-use std::io::Result;
-
-fn main() -> Result<()> {
-    // Compile Protobuf definitions
-    prost_build::compile_protos(&["proto/events.proto"], &["proto/"])?;
-
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    prost_build::compile_protos(&["proto/heimdall.proto"], &["proto/"])?;
     Ok(())
 }

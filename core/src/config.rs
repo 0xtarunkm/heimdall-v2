@@ -1,9 +1,23 @@
+// Copyright 2024 Heimdall Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use {
     agave_geyser_plugin_interface::geyser_plugin_interface::{
         GeyserPluginError, Result as PluginResult,
     },
     rdkafka::{
-        config::FromClientConfigAndContext,
+        config::FromClientConfig, // Import the trait here
         error::KafkaResult,
         producer::{DefaultProducerContext, ThreadedProducer},
         ClientConfig,
@@ -12,17 +26,21 @@ use {
     std::{collections::HashMap, fs::File, path::Path},
 };
 
+/// Plugin config.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
     #[allow(dead_code)]
     libpath: String,
 
+    /// Kafka config.
     pub kafka: HashMap<String, String>,
 
+    /// Graceful shutdown timeout.
     #[serde(default)]
     pub shutdown_timeout_ms: u64,
 
+    /// Accounts, transactions filters
     pub filters: Vec<ConfigFilter>,
 }
 
@@ -38,6 +56,7 @@ impl Default for Config {
 }
 
 impl Config {
+    /// Read plugin from JSON file.
     pub fn read_from<P: AsRef<Path>>(config_path: P) -> PluginResult<Self> {
         let file = File::open(config_path)?;
         let mut this: Self = serde_json::from_reader(file)
@@ -46,12 +65,14 @@ impl Config {
         Ok(this)
     }
 
+    /// Create rdkafka::ThreadedProducer from config.
     pub fn producer(&self) -> KafkaResult<ThreadedProducer<DefaultProducerContext>> {
         let mut config = ClientConfig::new();
         for (k, v) in self.kafka.iter() {
             config.set(k, v);
         }
-        ThreadedProducer::from_config_and_context(&config, DefaultProducerContext)
+        // This line now works because FromClientConfig is in scope
+        ThreadedProducer::from_config(&config)
     }
 
     fn set_default(&mut self, k: &'static str, v: &'static str) {
@@ -68,6 +89,7 @@ impl Config {
     }
 }
 
+/// Filter configuration for different types of events
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct ConfigFilter {
@@ -89,7 +111,7 @@ pub struct ConfigFilter {
     pub include_vote_transactions: bool,
     /// Publish failed transactions.
     pub include_failed_transactions: bool,
-    /// Wrap all event messages in a single message type.
+    /// Wrap all event message in a single message type.
     pub wrap_messages: bool,
 }
 

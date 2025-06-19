@@ -2,6 +2,8 @@ syntax = "proto3";
 
 import "google/protobuf/wrappers.proto";
 
+package heimdall.solana.geyser_plugin_kafka.types;
+
 message UpdateAccountEvent {
   uint64 slot = 1;
   bytes pubkey = 2;
@@ -62,20 +64,20 @@ message V0Message {
 }
 
 message V0LoadedMessage {
-  optional V0Message message_ = 1;
-  optional LoadedAddresses loaded_adresses = 2;
+  V0Message message_ = 1;
+  LoadedAddresses loaded_adresses = 2;
   repeated bool is_writable_account_cache = 3;
 }
 
 message LegacyMessage {
-  optional MessageHeader header = 1;
+  MessageHeader header = 1;
   repeated bytes account_keys = 2;
   bytes recent_block_hash = 3;
   repeated CompiledInstruction instructions = 4;
 }
 
 message LegacyLoadedMessage {
-  optional LegacyMessage message_ = 1;
+  LegacyMessage message_ = 1;
   repeated bool is_writable_account_cache = 2;
 }
 
@@ -87,7 +89,7 @@ message SanitizedMessage {
 }
 
 message SanitizedTransaction {
-  optional SanitizedMessage message_ = 1;
+  SanitizedMessage message_ = 1;
   bytes message_hash = 2;
   bool is_simple_vote_transaction = 3;
   repeated bytes signatures = 4;
@@ -99,12 +101,12 @@ message InnerInstructions {
 }
 
 message InnerInstruction {
-  optional CompiledInstruction instruction = 1;
+  CompiledInstruction instruction = 1;
   optional uint32 stack_height = 2;
 }
 
 message UiTokenAmount {
-  optional google.protobuf.DoubleValue ui_amount = 1;
+  google.protobuf.DoubleValue ui_amount = 1;
   uint32 decimals = 2;
   string amount = 3;
   string ui_amount_string = 4;
@@ -113,7 +115,7 @@ message UiTokenAmount {
 message TransactionTokenBalance {
   uint32 account_index = 1;
   string mint = 2;
-  optional UiTokenAmount ui_token_account = 3;
+  UiTokenAmount ui_token_account = 3;
   string owner = 4;
 }
 
@@ -129,10 +131,10 @@ message TransactionStatusMeta {
   bool is_status_err = 1;
   string error_info = 2;
   uint64 fee = 3;
-  repeated string log_messages = 4;
-  repeated InnerInstructions inner_instructions = 5;
-  repeated uint64 pre_balances = 6;
-  repeated uint64 post_balances = 7;
+  repeated uint64 pre_balances = 4;
+  repeated uint64 post_balances = 5;
+  repeated InnerInstructions inner_instructions = 6;
+  repeated string log_messages = 7;
   repeated TransactionTokenBalance pre_token_balances = 8;
   repeated TransactionTokenBalance post_token_balances = 9;
   repeated Reward rewards = 10;
@@ -141,16 +143,16 @@ message TransactionStatusMeta {
 message TransactionEvent {
   bytes signature = 1;
   bool is_vote = 2;
-  optional SanitizedTransaction transaction = 3;
-  optional TransactionStatusMeta transaction_status_meta = 4;
+  SanitizedTransaction transaction = 3;
+  TransactionStatusMeta transaction_status_meta = 4;
   uint64 slot = 5;
   uint64 index = 6;
 }
 
 message MessageWrapper {
   oneof event_message {
-    UpdateAccountEvent Account = 1;
-    SlotStatusEvent Slot = 2;
-    TransactionEvent Transaction = 3;
+    UpdateAccountEvent account = 1;
+    SlotStatusEvent slot = 2;
+    TransactionEvent transaction = 3;
   }
 }
