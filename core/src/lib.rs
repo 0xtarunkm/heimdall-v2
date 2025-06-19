@@ -3,6 +3,9 @@ use agave_geyser_plugin_interface::geyser_plugin_interface::GeyserPlugin;
 use crate::heimdall::Heimdall;
 
 mod heimdall;
+mod producer;
+mod config;
+mod filter;
 
 #[unsafe(no_mangle)]
 #[allow(improper_ctypes_definitions)]
