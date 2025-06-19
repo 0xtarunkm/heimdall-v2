@@ -1,0 +1,22 @@
+{
+  "kafka": {
+    "bootstrap.servers": "localhost:9092",
+    "group.id": "heimdall-consumer-group",
+    "security.protocol": "plaintext",
+    "auto.offset.reset": "earliest",
+    "enable.auto.commit": "true"
+  },
+  "clickhouse": {
+    "url": "http://localhost:8123",
+    "database": "heimdall",
+    "username": "default",
+    "password": ""
+  },
+  "topics": {
+    "accounts": "heimdall-accounts",
+    "slots": "heimdall-slots",
+    "transactions": "heimdall-transactions"
+  },
+  "batch_size": 1000,
+  "flush_interval_ms": 5000
+}

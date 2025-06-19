@@ -14,7 +14,6 @@
 
 use agave_geyser_plugin_interface::geyser_plugin_interface::SlotStatus as PluginSlotStatus;
 
-// Include the generated protobuf code
 include!(concat!(
     env!("OUT_DIR"),
     "/heimdall.solana.geyser_plugin_kafka.types.rs"
@@ -34,9 +33,7 @@ impl From<PluginSlotStatus> for SlotStatus {
     }
 }
 
-// Helper functions for working with events
 impl UpdateAccountEvent {
-    /// Create a new account update event
     pub fn new(
         slot: u64,
         pubkey: Vec<u8>,
@@ -63,7 +60,6 @@ impl UpdateAccountEvent {
 }
 
 impl SlotStatusEvent {
-    /// Create a new slot status event
     pub fn new(slot: u64, parent: u64, status: SlotStatus) -> Self {
         Self {
             slot,
@@ -74,7 +70,6 @@ impl SlotStatusEvent {
 }
 
 impl TransactionEvent {
-    /// Create a new transaction event
     pub fn new(
         signature: Vec<u8>,
         is_vote: bool,

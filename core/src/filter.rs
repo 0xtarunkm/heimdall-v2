@@ -1,24 +1,9 @@
-// Copyright 2024 Heimdall Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 use {
     crate::ConfigFilter,
     solana_pubkey::Pubkey,
     std::{collections::HashSet, str::FromStr},
 };
 
-/// Runtime filter for determining which events to publish
 pub struct Filter {
     pub publish_all_accounts: bool,
     pub program_ignores: HashSet<[u8; 32]>,
@@ -35,7 +20,6 @@ pub struct Filter {
 }
 
 impl Filter {
-    /// Create a new filter from configuration
     pub fn new(config: &ConfigFilter) -> Self {
         Self {
             publish_all_accounts: config.publish_all_accounts,
@@ -65,7 +49,6 @@ impl Filter {
         }
     }
 
-    /// Check if we want to process events for this program
     pub fn wants_program(&self, program: &[u8]) -> bool {
         match <&[u8; 32]>::try_from(program) {
             Ok(key) => {
@@ -76,7 +59,6 @@ impl Filter {
         }
     }
 
-    /// Check if we want to process events for this account
     pub fn wants_account(&self, account: &[u8]) -> bool {
         match <&[u8; 32]>::try_from(account) {
             Ok(key) => {
@@ -86,27 +68,22 @@ impl Filter {
         }
     }
 
-    /// Check if we want to process vote transactions
     pub fn wants_vote_tx(&self) -> bool {
         self.include_vote_transactions
     }
 
-    /// Check if we want to process failed transactions
     pub fn wants_failed_tx(&self) -> bool {
         self.include_failed_transactions
     }
 
-    /// Check if account topic is configured
     pub fn has_account_topic(&self) -> bool {
         !self.update_account_topic.is_empty()
     }
 
-    /// Check if slot topic is configured
     pub fn has_slot_topic(&self) -> bool {
         !self.slot_status_topic.is_empty()
     }
 
-    /// Check if transaction topic is configured
     pub fn has_transaction_topic(&self) -> bool {
         !self.transaction_topic.is_empty()
     }
