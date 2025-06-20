@@ -7,11 +7,11 @@ use {
 pub struct Filter {
     pub publish_all_accounts: bool,
     pub program_ignores: HashSet<[u8; 32]>,
+    pub account_ignores: HashSet<[u8; 32]>,
     pub program_filters: HashSet<[u8; 32]>,
     pub account_filters: HashSet<[u8; 32]>,
     pub include_vote_transactions: bool,
     pub include_failed_transactions: bool,
-
     pub update_account_topic: String,
     pub slot_status_topic: String,
     pub transaction_topic: String,
@@ -30,6 +30,11 @@ impl Filter {
                 .collect(),
             program_filters: config
                 .program_filters
+                .iter()
+                .flat_map(|p| Pubkey::from_str(p).ok().map(|p| p.to_bytes()))
+                .collect(),
+            account_ignores: config 
+                .account_ignores
                 .iter()
                 .flat_map(|p| Pubkey::from_str(p).ok().map(|p| p.to_bytes()))
                 .collect(),
@@ -55,14 +60,15 @@ impl Filter {
                 !self.program_ignores.contains(key)
                     && (self.program_filters.is_empty() || self.program_filters.contains(key))
             }
-            Err(_error) => true,
+            Err(_error) => self.program_filters.is_empty(),
         }
     }
 
     pub fn wants_account(&self, account: &[u8]) -> bool {
         match <&[u8; 32]>::try_from(account) {
             Ok(key) => {
-                self.account_filters.is_empty() || self.account_filters.contains(key)
+                !self.account_ignores.contains(key)
+                    && (self.account_filters.is_empty() || self.account_filters.contains(key))
             }
             Err(_error) => self.account_filters.is_empty(),
         }

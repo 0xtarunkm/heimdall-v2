@@ -3,10 +3,10 @@ use {
         GeyserPluginError, Result as PluginResult,
     },
     rdkafka::{
+        ClientConfig,
         config::FromClientConfig,
         error::KafkaResult,
         producer::{DefaultProducerContext, ThreadedProducer},
-        ClientConfig,
     },
     serde::Deserialize,
     std::{collections::HashMap, fs::File, path::Path},
@@ -80,6 +80,8 @@ pub struct ConfigFilter {
     pub transaction_topic: String,
     /// List of programs to ignore.
     pub program_ignores: Vec<String>,
+    /// List of accounts to ignore.
+    pub account_ignores: Vec<String>,
     /// List of programs to include
     pub program_filters: Vec<String>,
     /// List of accounts to include
@@ -101,6 +103,7 @@ impl Default for ConfigFilter {
             slot_status_topic: "".to_owned(),
             transaction_topic: "".to_owned(),
             program_ignores: Vec::new(),
+            account_ignores: Vec::new(),
             program_filters: Vec::new(),
             account_filters: Vec::new(),
             publish_all_accounts: false,

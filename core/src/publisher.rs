@@ -1,7 +1,7 @@
 use {
     crate::{
-        message_wrapper::EventMessage::{self, Account, Slot, Transaction},
         Config, MessageWrapper, SlotStatusEvent, TransactionEvent, UpdateAccountEvent,
+        message_wrapper::EventMessage::{self, Account, Slot, Transaction},
     },
     log::{debug, error, warn},
     prost::Message,
@@ -40,7 +40,7 @@ impl Publisher {
         };
 
         let record = BaseRecord::<Vec<u8>, _>::to(topic).key(key).payload(&buf);
-        
+
         match self.producer.send(record) {
             Ok(_) => {
                 debug!("Successfully sent account update to topic: {}", topic);
@@ -69,14 +69,17 @@ impl Publisher {
         };
 
         let record = BaseRecord::<Vec<u8>, _>::to(topic).key(key).payload(&buf);
-        
+
         match self.producer.send(record) {
             Ok(_) => {
                 debug!("Successfully sent slot status update to topic: {}", topic);
                 Ok(())
             }
             Err((e, _)) => {
-                error!("Failed to send slot status update to topic {}: {:?}", topic, e);
+                error!(
+                    "Failed to send slot status update to topic {}: {:?}",
+                    topic, e
+                );
                 Err(e)
             }
         }
@@ -100,14 +103,17 @@ impl Publisher {
         };
 
         let record = BaseRecord::<Vec<u8>, _>::to(topic).key(key).payload(&buf);
-        
+
         match self.producer.send(record) {
             Ok(_) => {
                 debug!("Successfully sent transaction update to topic: {}", topic);
                 Ok(())
             }
             Err((e, _)) => {
-                error!("Failed to send transaction update to topic {}: {:?}", topic, e);
+                error!(
+                    "Failed to send transaction update to topic {}: {:?}",
+                    topic, e
+                );
                 Err(e)
             }
         }

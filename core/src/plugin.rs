@@ -1,11 +1,10 @@
 use {
     crate::{
-        sanitized_message, CompiledInstruction, Config, Filter, InnerInstruction,
-        InnerInstructions, LegacyLoadedMessage, LegacyMessage, LoadedAddresses,
-        MessageAddressTableLookup, MessageHeader, Publisher, Reward, SanitizedMessage,
-        SanitizedTransaction, SlotStatus, SlotStatusEvent, TransactionEvent,
-        TransactionStatusMeta, TransactionTokenBalance, UiTokenAmount, UpdateAccountEvent,
-        V0LoadedMessage, V0Message,
+        CompiledInstruction, Config, Filter, InnerInstruction, InnerInstructions,
+        LegacyLoadedMessage, LegacyMessage, LoadedAddresses, MessageAddressTableLookup,
+        MessageHeader, Publisher, Reward, SanitizedMessage, SanitizedTransaction, SlotStatus,
+        SlotStatusEvent, TransactionEvent, TransactionStatusMeta, TransactionTokenBalance,
+        UiTokenAmount, UpdateAccountEvent, V0LoadedMessage, V0Message, sanitized_message,
     },
     agave_geyser_plugin_interface::geyser_plugin_interface::{
         GeyserPlugin, GeyserPluginError as PluginError, ReplicaAccountInfoV3,
@@ -85,7 +84,7 @@ impl GeyserPlugin for HeimdallPlugin {
         let publisher = self.unwrap_publisher();
         for filter in filters {
             if !filter.update_account_topic.is_empty() {
-                if !filter.wants_program(info.owner) && !filter.wants_account(info.pubkey) {
+                if !filter.wants_program(info.owner) || !filter.wants_account(info.pubkey) {
                     Self::log_ignore_account_update(info);
                     continue;
                 }
@@ -208,10 +207,14 @@ impl HeimdallPlugin {
     fn unwrap_update_account(account: ReplicaAccountInfoVersions) -> &ReplicaAccountInfoV3 {
         match account {
             ReplicaAccountInfoVersions::V0_0_1(_info) => {
-                panic!("ReplicaAccountInfoVersions::V0_0_1 unsupported, please upgrade your Solana node.");
+                panic!(
+                    "ReplicaAccountInfoVersions::V0_0_1 unsupported, please upgrade your Solana node."
+                );
             }
             ReplicaAccountInfoVersions::V0_0_2(_info) => {
-                panic!("ReplicaAccountInfoVersions::V0_0_2 unsupported, please upgrade your Solana node.");
+                panic!(
+                    "ReplicaAccountInfoVersions::V0_0_2 unsupported, please upgrade your Solana node."
+                );
             }
             ReplicaAccountInfoVersions::V0_0_3(info) => info,
         }
@@ -222,7 +225,9 @@ impl HeimdallPlugin {
     ) -> &ReplicaTransactionInfoV2 {
         match transaction {
             ReplicaTransactionInfoVersions::V0_0_1(_info) => {
-                panic!("ReplicaTransactionInfoVersions::V0_0_1 unsupported, please upgrade your Solana node.");
+                panic!(
+                    "ReplicaTransactionInfoVersions::V0_0_1 unsupported, please upgrade your Solana node."
+                );
             }
             ReplicaTransactionInfoVersions::V0_0_2(info) => info,
         }
@@ -373,7 +378,10 @@ impl HeimdallPlugin {
                                         .collect(),
                                     recent_block_hash: lv.message.recent_blockhash.as_ref().into(),
                                 }),
-                                is_writable_account_cache: (0..(lv.account_keys().len().saturating_sub(1)))
+                                is_writable_account_cache: (0..(lv
+                                    .account_keys()
+                                    .len()
+                                    .saturating_sub(1)))
                                     .map(|i: usize| lv.is_writable(i))
                                     .collect(),
                             })
@@ -432,7 +440,10 @@ impl HeimdallPlugin {
                                         .map(|x| x.as_ref().into())
                                         .collect(),
                                 }),
-                                is_writable_account_cache: (0..(v0.account_keys().len().saturating_sub(1)))
+                                is_writable_account_cache: (0..(v0
+                                    .account_keys()
+                                    .len()
+                                    .saturating_sub(1)))
                                     .map(|i: usize| v0.is_writable(i))
                                     .collect(),
                             })
