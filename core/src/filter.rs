@@ -33,7 +33,7 @@ impl Filter {
                 .iter()
                 .flat_map(|p| Pubkey::from_str(p).ok().map(|p| p.to_bytes()))
                 .collect(),
-            account_ignores: config 
+            account_ignores: config
                 .account_ignores
                 .iter()
                 .flat_map(|p| Pubkey::from_str(p).ok().map(|p| p.to_bytes()))

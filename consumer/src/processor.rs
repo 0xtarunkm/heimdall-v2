@@ -2,7 +2,7 @@ use crate::{
     Database,
     event::{AccountRow, MessageWrapper, SlotRow, TransactionRow},
 };
-use log::{warn};
+use log::warn;
 use prost::Message;
 
 pub struct Processor {
